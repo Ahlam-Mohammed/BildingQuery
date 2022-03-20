@@ -38,6 +38,80 @@ class DB {
         }
     }
 
+    public function get()
+    {
+        $this->initializStm();
+
+        $sql = "SELECT ". $this-> columns . 
+                " FROM ". $this-> table_name 
+                        . $this-> join
+                        . $this-> leftJoin
+                        . $this-> rightJoin
+                        . $this-> condition 
+                        . $this-> groupBy
+                        . $this-> orderBy 
+                        . $this-> limit;
+
+        $stm = $this->conn->prepare($sql);
+        echo $sql;
+        if ($stm->execute())
+        {
+            $this->result = $stm->fetchAll();
+            $this->resetInput();
+        }
+        else
+        {
+            $this->result = "error";
+            $this->resetInput();
+        }
+    }
+
+    public function update()
+    {
+
+        $this->initializStm();
+
+        $sql = "UPDATE ". $this->table_name
+                        . " SET " 
+                        . $this->values 
+                        . $this-> condition;
+        
+        $this->conn->prepare($sql)->execute();
+
+        $this->resetInput();
+    }
+
+    public function create($data = array())
+    {
+        $table_columns = implode(',', array_keys($data));
+        $table_values  = implode("','", $data);
+
+        $sql = "INSERT INTO $this->table_name ($table_columns) VALUES ('$table_values')";
+
+        $this->conn->prepare($sql)->execute();
+    }
+
+    public function count(string $column = null , bool $duplicate = true)
+    {
+        $this->columnCount = $column;
+        $this->duplicate   = $duplicate;
+        
+        $this->initializStm();
+
+        $sql = "SELECT COUNT (". $column ." )".
+                " FROM ". $this->table_name 
+                        . $this->condition 
+                        . $this->orderBy;
+
+        $stm = $this->conn->prepare($sql);
+        if ($stm->execute())
+        {
+            $this->result = $stm->fetchAll();
+        }
+        
+        $this->resetInput();
+    }
+
     public function table(string $table_name):DB
     {
         $this->table_name = $table_name;
@@ -113,70 +187,6 @@ class DB {
         return $this;
     }
 
-    public function get()
-    {
-        $this->initializStm();
-
-        $sql = "SELECT ". $this-> columns . 
-                " FROM ". $this-> table_name 
-                        . $this-> join
-                        . $this-> leftJoin
-                        . $this-> rightJoin
-                        . $this-> condition 
-                        . $this-> groupBy
-                        . $this-> orderBy 
-                        . $this-> limit;
-
-        $stm = $this->conn->prepare($sql);
-        echo $sql;
-        if ($stm->execute())
-        {
-            $this->result = $stm->fetchAll();
-        }
-        else
-        {
-            $this->result = "error";
-        }
-
-        // $this->resetInput();
-    }
-
-    public function update()
-    {
-
-        $this->initializStm();
-
-        $sql = "UPDATE ". $this->table_name
-                        . " SET " 
-                        . $this->values 
-                        . $this-> condition;
-        
-        $this->conn->prepare($sql)->execute();
-
-        $this->resetInput();
-    }
-
-    public function count(string $column = null , bool $duplicate = true)
-    {
-        $this->columnCount = $column;
-        $this->duplicate   = $duplicate;
-        
-        $this->initializStm();
-
-        $sql = "SELECT COUNT (". $column ." )".
-                " FROM ". $this->table_name 
-                        . $this->condition 
-                        . $this->orderBy;
-
-        $stm = $this->conn->prepare($sql);
-        if ($stm->execute())
-        {
-            $this->result = $stm->fetchAll();
-        }
-        
-        $this->resetInput();
-    }
-
     private function initializStm()
     {
         $this->table_name = $this->table_name === null ? ''  : $this->table_name;
@@ -215,9 +225,18 @@ class DB {
         $this->columnCount = null;
         $this->duplicate   = null;
 
-        $this->result = [];
+        // $this->result = [];
     }
 }
+
+
+
+
+
+
+
+
+//....... Testing ...........
 
 $DB = new DB();
 
